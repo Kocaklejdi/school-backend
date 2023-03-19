@@ -154,6 +154,16 @@ app.get("/courses",(req,res)=>{
 app.get("/students",(req,res)=>{
   res.json(students);
 })
+app.post("/addNewStudent",(req,res)=>{
+  const student =   {
+    id: students.length + 1,
+    name: req.body.name,
+  }
+  students.push(student);
+  console.log(students)
+  res.json(student);
+})
+
 app.post("/students",(req,res)=>{
   console.log(req.body.id);
   const foundStudent = students.find((element)=>{
