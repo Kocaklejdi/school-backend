@@ -1,3 +1,29 @@
+//1. get all students
+// -> fetch students
+//get students by ID
+
+//*** 2. get all courses
+//-> fetch courses
+//get course by ID
+
+//3. create new student (form with existing courses with checkbox)
+//-> refetch students
+//4. create new course (form with existing students with checkbox)
+//-> refetch courses
+
+//6. -> click course, go to new of it's course
+// -> fetch all student's courses
+// -> add new student to course (existing or create new)
+
+//5. add student to course
+//-> select existing or create new
+
+//6. get student names per course
+//7. remove student from course
+//8. give grade to student course
+//9. get average of grades in student per course
+
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
@@ -78,56 +104,6 @@ const courses = [
   
 ];
 
-//1. get all students
-// -> fetch students
-app.get("/students", (req, res) => {
-  res.json(students);
-});
-
-//get students by ID
-app.get("/students/:id", (req, res) => {
-  const studentId = parseInt(req.params.id);
-  const result = result.filter((s) => s.id === studentId);
-  if (result[0]) {
-    res.json(result[0]);
-  } else {
-    res.status(404).json("Student not found");
-  }
-});
-//*** 2. get all courses
-//-> fetch courses
-app.get("/courses", (req, res) => {
-  res.json(courses);
-});
-
-//get course by ID
-
-app.get("/courses/:id", (req, res) => {
-  const courseId = parseInt(req.params.id);
-  const course = courses.filter((course) => course.id === courseId)[0];
-  if (course) {
-    res.json(course);
-  } else {
-    res.status(404).json("Course not found");
-  }
-});
-//3. create new student (form with existing courses with checkbox)
-//-> refetch students
-//4. create new course (form with existing students with checkbox)
-//-> refetch courses
-
-//6. -> click course, go to new of it's course
-// -> fetch all student's courses
-// -> add new student to course (existing or create new)
-
-//5. add student to course
-//-> select existing or create new
-
-//6. get student names per course
-//7. remove student from course
-//8. give grade to student course
-//9. get average of grades in student per course
-
 function findCourse(id){
   for(let i = 0; i< courses.length; i++){
    if(courses[i].id == id){
@@ -155,12 +131,27 @@ app.get("/students",(req,res)=>{
   res.json(students);
 })
 app.post("/addNewStudent",(req,res)=>{
-  const student =   {
+  const student = {
     id: students.length + 1,
     name: req.body.name,
   }
+
+  const courseStudent = {
+    id:student.id,
+    grades:[]
+  }
+
+  const arr = {
+    students: req.body.courses
+  }
+
+  courses.forEach((course)=>{
+    if(arr.students.includes(course.id)){
+      course.students.push(courseStudent);
+    }
+  })
   students.push(student);
-  console.log(students)
+  //console.log(students)
   res.json(student);
 })
 
@@ -174,7 +165,7 @@ app.post("/students",(req,res)=>{
   res.json(foundStudent);
 })
 
-app.post("/courses",(req,res)=>{
+app.post("/course",(req,res)=>{
   //console.log(req.body.id);
   const foundCourse = courses.find((element)=>{
     if(element.id == req.body.id){
@@ -182,6 +173,21 @@ app.post("/courses",(req,res)=>{
     }
   })
   res.json(foundCourse);
+})
+
+app.post("/studentName",(req,res)=>{
+  const student = findStudentByID(req.body.id);
+  res.json(student);
+})
+
+app.post("/studentsNotPartOfCourse",(req,res)=>{
+  const studentIds = findCourse(req.body.id).students.map((element)=>element.id);
+  const studentsNotPartOfCourse = students.forEach((student)=>{
+    if(!studentIds.includes(student.id)){
+      return student
+    }
+  })
+  res.json("studentsNotPartOfCourse");
 })
 
 app.post("/courseWithStudentsByID",(req,res)=>{
@@ -223,3 +229,24 @@ app.post("/addNewCourse", (req, res) => {
   console.log(courses)
   res.json(course);
 });
+
+app.post("/getStudentCourses",(req,res)=>{
+  const all = courses.filter((course)=>{
+    if (course.students.find(e => e.id == req.body.id)) {
+        return course
+     }   
+  })
+  console.log(all)
+  res.json(all)
+
+})
+
+app.post("/giveGradeToStudent",(req,res)=>{
+ courses[req.body.courseId - 1].students.find((student)=>{
+    if(student.id == req.body.studentId){
+      student.grades.push(+req.body.grade);
+    }
+  })
+  res.json(courses[req.body.courseId - 1]);
+})
+
